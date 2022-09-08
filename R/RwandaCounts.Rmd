@@ -1,0 +1,16 @@
+---
+title: "Rwanda Counts"
+output: html_document
+date: "2022-09-08"
+---
+
+```{r}
+library(pacman)
+p_load(tidyverse, dplyr, magrittr, ggplot2, lubridate, janitor, data.table)
+```
+
+```{r}
+df <- fread("../../../")
+```
+
+

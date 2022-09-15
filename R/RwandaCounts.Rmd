@@ -6,11 +6,41 @@ date: "2022-09-08"
 
 ```{r}
 library(pacman)
-p_load(tidyverse, dplyr, magrittr, ggplot2, lubridate, janitor, data.table)
+p_load(tidyverse, dplyr, magrittr, ggplot2, lubridate, janitor, data.table, readxl, leaflet)
 ```
 
 ```{r}
-df <- fread("../../../")
+df <- read_xlsx("../../../../Dropbox/MPI/Eidolon/Fieldwork/Rwanda/Bat count data manipulation.xlsx", sheet = 1) %>% clean_names
+df$datetime <- paste0(df$date, " ", sapply(strsplit(as.character(df$time), " "), "[", 2))
+```
+
+separate numbers and add together
+```{r}
+counts <- sapply(strsplit(as.character(df$number_sighted_on_branche), "; "), as.numeric)
+df$count <- sapply(counts, sum)
+```
+
+```{r}
+table(df$locality_e_g_farm_name_or_sector)
+```
+
+```{r}
+plot( df$longitude, df$latitude, col = as.factor(df$study_area), asp = 1)
+```
+
+
+```{r}
+leaflet(data = df) %>% addTiles() %>% addMarkers(~longitude, ~latitude, 
+                                                 popup = ~paste0(study_area, " ", date, ": ", count),
+                                                 label = ~paste0(study_area, " ", date, ": ", count))
+```
+
+
+```{r}
+df %>% group_by(date, study_area) %>% summarise(total = sum(count)) -> df_sum
+
+ggplot(df_sum, aes(x= date, y = total, col = study_area, group = study_area))+
+  geom_path(size = 0.8)+theme_classic()
 ```
 
 

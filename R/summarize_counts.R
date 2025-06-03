@@ -2,29 +2,31 @@
 library(pacman)
 p_load(tidyverse, lubridate, mgcv, lme4, sjPlot)
 
+# load data
 counts <- read.csv("../../../Dropbox/MPI/Eidolon/Data/Count/2024-12-11_counts_summaries.csv")
 
+# round dates to monthly
 counts$Month <- ymd(counts$Month)
 counts$Month[which(is.na(counts$Month))] <- dmy(counts$Date[which(is.na(counts$Month))]) %>%
   round_date(unit = "month")
-counts$Month %>% tail
 
-min(counts$Month, na.rm = TRUE)
-
+# make sure counts are numeric
 counts$Count <- counts$Count %>% as.numeric()
 
 # replace empty city.place
 counts$City.Place[which(counts$City.Plac == "")] <- counts$Locality[which(counts$City.Plac == "")]
 table(counts$City.Place)
 
-summary(counts)
-
+colonies <- counts %>% group_by(City.Place) %>%
+  reframe(lat = first(lat), long = first(long))
+write.csv(colonies, file = "../../../Dropbox/GreenWave/geemap/colonies.csv")
 
 counts %>% reframe(
   start_year = year(min(Month, na.rm = TRUE)),
   end_year = year(max(Month, na.rm = TRUE)),
   duration_in_years = round(difftime(max(Month, na.rm = TRUE),
-                                     min(Month, na.rm = TRUE), units = "days")/365, 1) %>% as.numeric(),
+                                     min(Month, na.rm = TRUE),
+                                     units = "days")/365, 1) %>% as.numeric(),
   missing_counts = length(which(is.na(Count))),
   max_size = max(Count, na.rm = TRUE),
   size_0 = length(which(Count == 0)),
@@ -40,9 +42,10 @@ counts %>% reframe(
 # which months have no bats?
 counts <- counts[order(counts$Month),]
 ggplot(counts,#[counts$City.Place != "Kasanka",],
-       aes(x = month(Month), y = Count,#/max(Count, na.rm = TRUE),
+       aes(x = month(Month), y = Count, #/max(Count, na.rm = TRUE),
                    group = City.Place,
-                   col = City.Place))+geom_point()+#geom_path()+
+                   col = City.Place))+
+  geom_point()+#geom_path()+
   geom_smooth(aes(group = City.Place), se = FALSE)+
       # , method = "gam", formula = y ~ s(x,  bs="cc"))+
   ylab("# of bats")+
@@ -58,24 +61,10 @@ ggsave(filename = "../../../Dropbox/MPI/Eidolon/Plots/eidolon_colony_counts.svg"
 # add to a map or compare distances between colonies and
 # how they may be correlated or anti-correlated in time
 
-
 counts$year <- year(counts$Month)
 counts$loc <- factor(counts$City.Place)
-m_full <- gam(Count ~ s(year, k = 6)+s(loc, bs = "re"),
-    method = "REML",
-    family = nb,
-  data = counts %>% filter(loc != "Kasanka"))
-summary(m_full)
 
-plot(m_full, ask = FALSE, pages = 1)
-
-k.check(m_full)
-par(mfrow = c(2,2))
-gam.check(m_full)
-
-
-counts$year <- year(counts$Month)
-
+# How does max count change over time?
 yearly_max_count <- counts %>% reframe(
   max_size = max(Count, na.rm = TRUE),
   size_0 = length(which(Count == 0)),

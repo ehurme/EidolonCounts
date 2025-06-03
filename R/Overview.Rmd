@@ -1,0 +1,18 @@
+---
+title: "Overview"
+output: html_document
+date: "2025-06-03"
+---
+
+# Eidolon papers
+
+1. Count data analysis
+- highlight roost extinctions
+- extract human footprint index and forest loss around roosts
+- plot data by year with year as a different color
+
+2. Situation of Eidolon in Africa
+- yearly max counts against year - do we see a decline in population sizes?
+
+3. Kasanka Video Analysis
+- update video based count across all years of data - Starting late summer 2025

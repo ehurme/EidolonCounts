@@ -136,14 +136,30 @@ plot(m, ask = FALSE, pages = 1)
 mgcv::gam.check(m)
 
 # how does peak colony size per year change?
+summary_data <- counts %>%
+  group_by(year, loc) %>%
+  summarize(
+    max_count = suppressWarnings(max(count, na.rm = TRUE)),  # Suppress -Inf warnings
+    EVI = evi[which.max(count)[1]],  # [1] handles empty which.max results
+    IRG = irg[which.max(count)[1]],
+    PRP = precip[which.max(count)[1]],
+    IRP = precip_p[which.max(count)[1]],
+    .groups = 'drop'
+  ) %>%
+  mutate(max_count = na_if(max_count, -Inf))  # Convert -Inf to NA
 
-yearly_max_count <- counts %>% reframe(
-  max_size = max(Count, na.rm = TRUE),
-  size_0 = length(which(Count == 0)),
-  total_counts = n(),
-  total_months = length(unique(Month)),
-  .by = c(loc, Country, year))
-
+m_max <- gam(max_count ~
+           # s(EVI)+
+           # s(IRG)+
+           # s(PRP)+
+           # s(IRP)+
+           s(year)+
+           s(loc, bs = "re"),
+         method = "REML",
+         # family = nb,
+         data = summary_data %>% filter(loc != "Kasanka"))
+summary(m_max)
+plot(m_max, ask = FALSE, pages = 1)
 
 
 ## Update to include environmental factors in the model

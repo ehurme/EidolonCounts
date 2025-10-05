@@ -136,7 +136,7 @@ plot(m, ask = FALSE, pages = 1)
 mgcv::gam.check(m)
 
 # how does peak colony size per year change?
-summary_data <- counts %>%
+max_counts <- counts %>%
   group_by(year, loc) %>%
   summarize(
     max_count = suppressWarnings(max(count, na.rm = TRUE)),  # Suppress -Inf warnings
@@ -157,7 +157,7 @@ m_max <- gam(max_count ~
            s(loc, bs = "re"),
          method = "REML",
          # family = nb,
-         data = summary_data %>% filter(loc != "Kasanka"))
+         data = max_counts %>% filter(loc != "Kasanka"))
 summary(m_max)
 plot(m_max, ask = FALSE, pages = 1)
 
@@ -214,8 +214,8 @@ counts %>% reframe(max_count = max(count, na.rm = TRUE),
 # }
 
 
-save(counts, file = "./../../../Dropbox/MPI/Eidolon/Greenwave/rdata/colony_counts_EVI_PRP_20250428.Rdata")
-load("./../../../Dropbox/MPI/Eidolon/Greenwave/rdata/colony_counts_EVI_PRP_20250428.Rdata")
+save(counts, max_counts, file = "./../../../Dropbox/MPI/Eidolon/Greenwave/rdata/colony_counts_EVI_PRP_20250603.Rdata")
+load("./../../../Dropbox/MPI/Eidolon/Greenwave/rdata/colony_counts_EVI_PRP_20250603.Rdata")
 # load("../../../../Dropbox/MPI/Eidolon/Greenwave/rdata/regular_colonies_TRMM.Rdata")
-write.csv(counts, file = "./../../../Dropbox/MPI/Eidolon/Greenwave/colony_counts_EVI_PRP_20250428.csv")
+write.csv(counts, file = "./../../../Dropbox/MPI/Eidolon/Greenwave/colony_counts_EVI_PRP_20250603.csv")
 
